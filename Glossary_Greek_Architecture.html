@@ -58,55 +58,32 @@
 									<section>
 
 										<h3 class="major">Languages of countries are named with ISO 3166-1 alpha 2 norm :</h3>
-										<input type="text" id="inputMonumentalBuildings" onkeyup="searchTable('inputMonumentalBuildings','tableMonumentalBuildings')" placeholder="Search for GB names.." title="Type in a name">
-										<i>You can click on each column title to sort rows</i> </br></br>
+										<input type="text" id="inputFilterAction" onkeyup="selectFilterAction()" placeholder="Search text.." title="Type in text" style="display: inline;width:30%">
+										<select id="selectFilterActionTable" style="display: inline;width:10%"></select>
+										<select id="selectFilterAction" onchange="hideInputOnAction()" style="display: inline;width:20%">
+											<option value="0">Filter by name</option>
+											<!-- <option value="1">Filter by value</option> -->
+											<option value="2">Filter by order</option>
+										</select>
+
+										<!-- <span id="spanAvecPourOption" style="display: none;">avec pour option :</span> -->
+										<!-- <select disabled hidden id="selectedBinaryOperator" style="display: inline;width:10%">
+											<option value="0"><</option>
+											<option value="1"><=</option>
+											<option value="2">=</option>
+											<option value="3">></option>
+											<option value="4">>=</option>
+										</select> -->
+										<select disabled hidden id="selectedOrder" style="display: inline;width:15%">
+											<option value="0">ASC</option>
+											<option value="1">DESC</option>
+										</select>
+										<button id="sortButton" onclick="selectFilterAction()" disabled hidden>Order</button>
+										<!-- <i>You can click on each column title to sort rows</i> </br></br> -->
 										<h4>Types of monumental buildings (in progress)</h4>
-								
+
 										<div id="tableMonumentalBuildings" class="table-wrapper"></div>
 
-										<!-- <div class="table-wrapper">
-											<table id="tableMonumentalBuildings" class="sortable">
-												<thead>
-													<tr>
-														<th>GB</th>
-														<th>FR</th>
-														<th>DE</th>
-														<th>IT</th>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td>BATH BUILDING, BATHS (pl.)</td>
-														<td>BAINS (m. pl.), ÉTABLISSEMENT (m) DE BAINS, BALNÉAIRE (m)</td>
-														<td>BADEANLAGE (f), BADEHAUS (n), BAD (n),</td>
-														<td>BAGNI (m. pl.)</td>
-													</tr>
-													<tr>
-														<td>THEATRE</td>
-														<td>THÉÂTRE (m)</td>
-														<td>THEATER (n)</td>
-														<td>TEATRO (m)</td>
-													</tr>
-													<tr>
-														<td>TEMPLE</td>
-														<td>TEMPLE (m)</td>
-														<td>TEMPEL (m)</td>
-														<td>TEMPIO (m)</td>
-													</tr>
-													<tr>
-														<td>PORTICO</td>
-														<td>PORTIQUE (m)</td>
-														<td>PORTIKUS (m), SÄULENHALLE (f)</td>
-														<td>PORTICO (m)</td>
-													</tr>
-												</tbody>
-												<tfoot>
-													<tr>
-														<td colspan="2"></td>
-													</tr>
-												</tfoot>
-											</table>
-										</div> -->
 
 										<h4>Architectural elevation elements (in progress)</h4>
 
@@ -201,8 +178,7 @@
 
 			</div>
 
-				<!-- Scripts -->
-				<script>
+					<script>
 				// ex URL publique : https://jsonplaceholder.typicode.com/todos/1
 
 					var tab_name = 'GlossaryMonumentalBuildings';
@@ -229,65 +205,250 @@
 						// Parse JSON string into object
 						var actual_JSON = JSON.parse(response);
 						realJSON = actual_JSON.values;
-						GFG_FUN(realJSON, 'tableMonumentalBuildings');
+						importJsonGoogleSheetsData(realJSON, 'tableMonumentalBuildings');
 					});
 
-					function GFG_FUN(list, tableId) {
+					function importJsonGoogleSheetsData(list, tableId) {
 						var cols = [];
 
 						for (var i = 0; i < list.length; i++) {
 							for (var k in list[i]) {
-									if (cols.indexOf(k) === -1) {
-
-								// Push all keys to the array
-								cols.push(k);
-									}
+								if (cols.indexOf(k) === -1) {
+									cols.push(k);
+								}
 							}
 						}
 
 						// Create a table element
 						var table = document.createElement("table");
 						table.setAttribute("class", "sortable");
+						table.setAttribute("id", "tableData");
 
 						// Create theader
 						var thead = document.createElement("thead");
 						var tr = table.appendChild(thead);
+						var selectFilterAction = document.getElementById("selectFilterActionTable");
+						var options = [];
 
 						for (var i = 0; i < cols.length; i++) {
-							// Create the table header th element
 							var theader = document.createElement("th");
 							theader.innerHTML = list[0][i];
-
-							// Append columnName to the table row
+							var optionSelectFilterAction = new Option(theader.innerHTML, i);
+							selectFilterAction.appendChild(optionSelectFilterAction);
 							tr.appendChild(theader);
 						}
 
-						// Create footer
-						var tfoot = document.createElement("tfoot");
-						var theader_footer = document.createElement("th");
-						var td_footer = document.createElement("td");
-						table.appendChild(tfoot);
-						tfoot.appendChild(theader_footer);
-						theader_footer.appendChild(td_footer);
-						td_footer.setAttribute("colspan", "2");
-
-						// Adding the data to the table
 						for (var i = 1; i < list.length; i++) {
-							// Create a new row
 							trow = table.insertRow(-1);
 							for (var j = 0; j < cols.length; j++) {
-									var cell = trow.insertCell(-1);
-									// Inserting the cell at particular place
-									cell.innerHTML = list[i][cols[j]];
+								var cell = trow.insertCell(-1);
+								cell.innerHTML = list[i][cols[j]];
 							}
 						}
 
-						// Add the newly created table containing json data
 						var el = document.getElementById(tableId);
 						el.innerHTML = "";
 						el.appendChild(table);
-				}
+		      }
 
+					function selectFilterAction() {
+						var action = selectTable("selectFilterAction");
+						var columnId = selectTable("selectFilterActionTable");
+						if (action == 0) { // TRI PAR NOM
+							searchTable('inputFilterAction','tableMonumentalBuildings',columnId);
+						} else if (action == 1) { // TRI PAR VALEUR
+							// searchBinaryOperatorTable('inputFilterAction','tableMonumentalBuildings',columnId);
+						} else if (action == 2) { // TRI PAR ORDRE
+							sortTable('inputFilterAction','tableMonumentalBuildings',columnId);
+						}
+					}
+
+					function hideInputOnAction() {
+						var action = selectTable("selectFilterAction");
+						// var selectedBinaryOperator = document.getElementById("selectedBinaryOperator");
+						var inputFilterAction = document.getElementById("inputFilterAction");
+						var sortButton = document.getElementById("sortButton");
+						var selectedOrder = document.getElementById("selectedOrder");
+						// var textAvecPourOption = document.getElementById("spanAvecPourOption");
+						console.log(action);
+						if (action == 0) { // TRI PAR NOM
+							disableAndHideInput(sortButton, true);
+							disableAndHideInput(inputFilterAction, false);
+							// disableAndHideInput(selectedBinaryOperator);
+							disableAndHideInput(selectedOrder, true);
+							// disableAndHideInput(textAvecPourOption);
+						} else if (action == 1) { // TRI PAR VALEUR
+							// disableAndHideInput(sortButton);
+							// disableAndHideInput(inputFilterAction, false);
+							// disableAndHideInput(selectedBinaryOperator, false);
+							// disableAndHideInput(selectedOrder);
+							// disableAndHideInput(textAvecPourOption, false);
+						} else if (action == 2) { // TRI PAR ORDRE
+							disableAndHideInput(sortButton, false);
+							disableAndHideInput(inputFilterAction, true);
+							// disableAndHideInput(selectedBinaryOperator);
+							disableAndHideInput(selectedOrder, false);
+							// disableAndHideInput(textAvecPourOption, false);
+						}
+					}
+
+					function disableAndHideInput(input, isToDisableAndHide = true) {
+						if (isToDisableAndHide) {
+								input.disabled = true;
+								if (input.tagName.toLowerCase() === 'input') {
+									input.setAttribute('type','hidden');
+								} else if (input.tagName.toLowerCase() === 'span') {
+									input.style.display= 'none';
+								} else if (input.tagName.toLowerCase() === 'button') {
+									input.hidden = true
+								}
+							} else {
+								input.disabled = false;
+								if (input.tagName.toLowerCase() === 'input') {
+									input.setAttribute('type','text');
+								} else if (input.tagName.toLowerCase() === 'span') {
+									input.style.display= '';
+								} else if (input.tagName.toLowerCase() === 'button') {
+									input.hidden = false
+								}
+						}
+					}
+
+					function selectTable(columnId) {
+						var columnSearchId = document.getElementById(columnId).value;
+						return columnSearchId;
+					}
+
+					function searchTable(input,table,columnId) {
+						var columnSearchId = columnId;
+						var trValues = document.getElementById("tableData").getElementsByTagName("tbody")[0].rows;
+						var input, filter, table, tr, td, i, txtValue;
+						input = document.getElementById(input);
+						filter = input.value.toUpperCase();
+						table = document.getElementById(table);
+						tr = table.getElementsByTagName("tr");
+
+						for (i = 0; i < tr.length; i++) {
+							td = tr[i].getElementsByTagName("td")[columnSearchId];
+							if (td) {
+								txtValue = td.textContent || td.innerText;
+								if (txtValue.toUpperCase().indexOf(filter) > -1) {
+								tr[i].style.display = "";
+								} else {
+								tr[i].style.display = "none";
+								}
+							}
+						}
+					}
+
+					function searchBinaryOperatorTable(input,table,columnId) {
+						var columnSearchId = columnId;
+						var binaryOperatorId = selectTable("selectedBinaryOperator");
+						var input, table, tr, td, i, txtValue;
+
+						if (binaryOperatorId == 0) {
+						binaryOperator = '<';
+						} else if (binaryOperatorId == 1) {
+							binaryOperator = '<=';
+						}  else if (binaryOperatorId == 2) {
+							binaryOperator = '=';
+						} else if (binaryOperatorId == 3) {
+							binaryOperator = '>';
+						} else if (binaryOperatorId == 4) {
+							binaryOperator = '>=';
+						}
+
+						input = document.getElementById(input);
+						table = document.getElementById(table);
+						tr = table.getElementsByTagName("tr");
+
+						for (i = 0; i < tr.length; i++) {
+							td = tr[i].getElementsByTagName("td")[columnSearchId];
+							if (td) {
+								txtValue = td.textContent || td.innerText;
+								if (binaryOperator == '<') {
+									if ((txtValue*1 < input.value*1) || ( input.value == "" ) ) {
+										tr[i].style.display = "";
+									} else {
+										tr[i].style.display = "none";
+									}
+								} else if (binaryOperator == '<=') {
+									if ((txtValue*1 <= input.value*1) || ( input.value == "" ) ) {
+										tr[i].style.display = "";
+									} else {
+										tr[i].style.display = "none";
+									}
+								} else if (binaryOperator == '=') {
+									if ((txtValue*1 == input.value*1) || ( input.value == "" ) ) {
+										tr[i].style.display = "";
+									} else {
+										tr[i].style.display = "none";
+									}
+								} else if (binaryOperator == '>') {
+									if ((txtValue*1 > input.value*1) || ( input.value == "" ) ) {
+										tr[i].style.display = "";
+									} else {
+										tr[i].style.display = "none";
+									}
+								} else if (binaryOperator == '>=') {
+									if ((txtValue*1 >= input.value*1) || ( input.value == "" ) ) {
+										tr[i].style.display = "";
+									} else {
+										tr[i].style.display = "none";
+									}
+								}
+							}
+						}
+					}
+
+					function sortTable(input,table,columnId) {
+						var selectedOrder = document.getElementById("selectedOrder").value;
+						var columnSearchId = columnId;
+						var switching, i, x, y, shouldSwitch;
+						var input, table, tr, i, txtValue;
+						input = document.getElementById(input);
+						filter = input.value.toUpperCase();
+						table = document.getElementById(table);
+						tr = table.getElementsByTagName("tr");
+						switching = true;
+
+						while (switching) {
+							switching = false;
+							if (selectedOrder == 0) { // ORDRE CROISSANT
+								for (i = 0; i < tr.length - 1; i++) {
+									shouldSwitch = false;
+									x = tr[i].getElementsByTagName("td")[columnSearchId];
+									y = tr[i + 1].getElementsByTagName("td")[columnSearchId];
+									if (convertAccentToStandardLetter(x.innerHTML.toLowerCase()) > convertAccentToStandardLetter(y.innerHTML.toLowerCase())) {
+										shouldSwitch = true;
+										break;
+									}
+								}
+							} else if (selectedOrder == 1) { // ORDRE DECROISSANT
+								for (i = 0; i < tr.length - 1; i++) {
+									shouldSwitch = false;
+									x = tr[i].getElementsByTagName("td")[columnSearchId];
+									y = tr[i + 1].getElementsByTagName("td")[columnSearchId];
+									if (convertAccentToStandardLetter(x.innerHTML.toLowerCase()) < convertAccentToStandardLetter(y.innerHTML.toLowerCase())) {
+										shouldSwitch = true;
+										break;
+									}
+								}
+							}
+							if (shouldSwitch) {
+								tr[i].parentNode.insertBefore(tr[i + 1], tr[i]);
+								switching = true;
+							}
+						}
+					}
+
+					function convertAccentToStandardLetter(value) {
+						if (!isNaN(value)) { // NOMBRE
+							return parseInt(value);
+						} else { // TEXTE
+							return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+						}
+					}
 			</script>
 			<script src="assets/js/jquery.min.js"></script>
 			<script src="assets/js/jquery.scrollex.min.js"></script>
@@ -296,7 +457,7 @@
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
 			<script src="assets/js/sorttable.js"></script>
-			<script src="assets/js/searchtable.js"></script>
+			<!-- <script src="assets/js/searchtable.js"></script> -->
 			<script src="assets/js/copy.js"></script>
 
 	</body>
